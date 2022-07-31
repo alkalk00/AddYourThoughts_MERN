@@ -8,9 +8,9 @@ import { createPost, updatePost } from "../../actions/posts";
 const Form = ({curId, setcurId}) => {
 
   const post  = useSelector((state)=> curId ? state.posts.find((p)=> p._id === curId) : null)
+  const user = JSON.parse(localStorage.getItem('profile'));
 
   const [postData, setpostData] = useState({
-    creator: "",
     title: "",
     message: "",
     tags: "",
@@ -28,18 +28,27 @@ const Form = ({curId, setcurId}) => {
     e.preventDefault();
 
     if(curId){
-      dispatch(updatePost(curId, postData))
+      dispatch(updatePost(curId, { ...postData, name: user?.result?.name }))
     }else{
-      dispatch(createPost(postData));
+      dispatch(createPost({ ...postData, name: user?.result?.name }));
     }
     clear();
   };
 
   const clear = () => {
     setcurId(null);
-    setpostData({creator: "", title: "", message: "", tags: "", selectFile: "",})
+    setpostData({title: "", message: "", tags: "", selectFile: "",})
   };
 
+  if (!user?.result?.name) {
+    return (
+      <Paper className={classes.paper}>
+        <Typography variant="h6" align="center">
+          Please Sign In to create your own memories and like other's memories.
+        </Typography>
+      </Paper>
+    );
+  }
   return (
     <>
       <Paper className={classes.paper}>
@@ -50,16 +59,6 @@ const Form = ({curId, setcurId}) => {
           onSubmit={handleEvent}
         >
           <Typography variant="h6"> {curId ? 'Editing' : 'Capturing'} Memories</Typography>
-          <TextField
-            name="creator"
-            variant="outlined"
-            label="Creator"
-            fullWidth
-            value={postData.creator}
-            onChange={(e) =>
-              setpostData({ ...postData, creator: e.target.value })
-            }
-          />
           <TextField
             name="title"
             variant="outlined"

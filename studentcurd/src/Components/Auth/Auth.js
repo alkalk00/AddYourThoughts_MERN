@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useState , useEffect} from "react";
 import {
   Avatar,
   Button,
@@ -11,30 +11,71 @@ import { GoogleLogin } from "react-google-login";
 import useStyle from "../Auth/styles";
 import Input from "./Input";
 import Icon from "./Icon";
+import {gapi} from 'gapi-script'
+import {useDispatch} from 'react-redux'
+import { useNavigate} from 'react-router-dom'
+import {issignin, issignup} from '../../actions/auth'
 
 const Auth = () => {
   const [showPassword, setshowPassword] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const formdatas = {firstname: '', lastname: '', email: '', password: '', confirmPasswrod: ''}
+  const[formdata,setformdata] = useState(formdatas);
 
   const changePasswordVisible = () =>
-    setshowPassword((prevShowPassword) => !prevShowPassword);
+  setshowPassword((prevShowPassword) => !prevShowPassword);
+
   const classes = useStyle();
+  const [signup, setsignup] = useState(false);
 
-  const signup = false;
+  const handleClick = (e) => {
+    e.preventDefault();
+    if(signup){
+      dispatch(issignup(formdata, navigate))
+    }else{
+      dispatch(issignin(formdata, navigate))
+    }
+  };
 
-  const handleClick = () => {};
+  const handleChange = (e) => {
+    setformdata({...formdata, [e.target.name]: e.target.value})
+  };
 
-  const handleChange = () => {};
-
-  const switchMode = () => {};
+  const switchMode = () => {
+    setsignup((prevsignup)=> !prevsignup)
+  };
 
   const googleSuccess = async (res) => {
-    console.log(res);
+    const result = res?.profileObj;
+    const token = res?.tokenId;
+
+    try{
+      dispatch({type: 'AUTH', data: {result,token}});
+      navigate('/')
+    }catch(err){
+      console.log(err)
+    }
+
+    console.log(result);
   };
 
   const googleError = (err) => {
-    console.log(err)
+    console.log(err);
     console.log("failure in login with google");
   };
+
+  //to handle error occuring in google Auth
+  useEffect(()=>{
+    function start() {
+      gapi.client.init({
+        clientId: '838718155561-67d4qmv7up9f5sb6eg7j78s2im23ddgc.apps.googleusercontent.com',
+        scope: 'email',
+      });
+    }
+    gapi.load('client:auth2', start);
+  },[])
 
   return (
     <Container component="main" maxWidth="xs">
@@ -46,7 +87,7 @@ const Auth = () => {
             {signup && (
               <>
                 <Input
-                  name="firstName"
+                  name="firstname"
                   label="First Name"
                   handleChange={handleChange}
                   autoFocus
@@ -54,7 +95,7 @@ const Auth = () => {
                 />
 
                 <Input
-                  name="lasttName"
+                  name="lastname"
                   label="Last Name"
                   handleChange={handleChange}
                   half
@@ -95,7 +136,16 @@ const Auth = () => {
           <GoogleLogin
             clientId="838718155561-67d4qmv7up9f5sb6eg7j78s2im23ddgc.apps.googleusercontent.com"
             render={(renderProps) => (
-              <Button className={classes.googleButton} color="primary" fullWidth onClick={renderProps.onClick} disabled={renderProps.disabled} startIcon={<Icon />} variant="contained">
+              <Button
+                className={classes.googleButton}
+                color="primary"
+                fullWidth
+                onClick={renderProps.onClick}
+                disabled={renderProps.disabled}
+                startIcon={<Icon />}
+                variant="contained"
+                plugin_name = 'PLUGIN'
+              >
                 Google Sign In
               </Button>
             )}

@@ -8,8 +8,9 @@ import {
   Typography,
 } from "@material-ui/core";
 import moment from "moment";
-import ThumbUpAtIcon from "@material-ui/icons/ThumbUpAlt";
-import DeleteIcon from "@material-ui/icons/Delete";
+import ThumbUpAltIcon from '@material-ui/icons/ThumbUpAlt';
+import DeleteIcon from '@material-ui/icons/Delete';
+import ThumbUpAltOutlined from '@material-ui/icons/ThumbUpAltOutlined';
 import MoreHorizIcon from "@material-ui/icons/MoreHoriz";
 import {useDispatch} from 'react-redux';
 import { deletePost, updatelike } from "../../../actions/posts";
@@ -18,6 +19,20 @@ import { deletePost, updatelike } from "../../../actions/posts";
 const Post = ({ post, setcurId }) => {
   const classes = useStyle();
   const dispatch = useDispatch();
+  const user = JSON.parse(localStorage.getItem('profile'));
+
+  const Likes = () => {
+    if (post.likes.length > 0) {
+      return post.likes.find((like) => like === (user?.result?.googleId || user?.result?._id))
+        ? (
+          <><ThumbUpAltIcon fontSize="small" />&nbsp;{post.likes.length > 2 ? `You and ${post.likes.length - 1} others` : `${post.likes.length} like${post.likes.length > 1 ? 's' : ''}` }</>
+        ) : (
+          <><ThumbUpAltOutlined fontSize="small" />&nbsp;{post.likes.length} {post.likes.length === 1 ? 'Like' : 'Likes'}</>
+        );
+    }
+
+    return <><ThumbUpAltOutlined fontSize="small" />&nbsp;Like</>;
+  };
 
   return (
     <Card className={classes.card}>
@@ -27,11 +42,12 @@ const Post = ({ post, setcurId }) => {
         title={post.title}
       />
       <div className={classes.overlay}>
-        <Typography variant="h6">{post.creator}</Typography>
+        <Typography variant="h6">{post.name}</Typography>
         <Typography variant="body">
           {moment(post.createdAt).fromNow()}
         </Typography>
       </div>
+      {(user?.result?.googleId === post?.creator || user?.result?._id === post?.creator) && (
       <div className={classes.overlay2}>
         <Button
           style={{ color: "white" }}
@@ -44,6 +60,7 @@ const Post = ({ post, setcurId }) => {
           <MoreHorizIcon fontSize="default" />
         </Button>
       </div>
+      )}
       <div className={classes.details}>
         <Typography variant="body2" color="textSecondary">
           {post.tags.map((tag) => `#${tag} `)}
@@ -55,14 +72,15 @@ const Post = ({ post, setcurId }) => {
       <Typography className={classes.title} gutterBottom>{post.message}</Typography>
       <CardActions className={classes.cardActions}>
         <Button size="small" color="primary" onClick={() => dispatch(updatelike(post._id))}>
-          <ThumbUpAtIcon fontSize="small" />
-          Like
-          {post.likeCount}
+          <Likes />
         </Button>
-        <Button size="small" color="primary" onClick={() => dispatch(deletePost(post._id))}>
-          <DeleteIcon fontSize="small" />
-          Delete
+        {(user?.result?.googleId === post?.creator || user?.result?._id === post?.creator) && (
+          <Button size="small" color="primary" onClick={() => dispatch(deletePost(post._id))}>
+            <DeleteIcon fontSize="small" />
+              Delete
         </Button>
+        )}
+        
       </CardActions>
     </Card>
   );
