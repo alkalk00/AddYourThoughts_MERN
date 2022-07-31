@@ -1,2 +1,2 @@
 # AddYourThoughts_MERN
-# [View App](https://legendary-granita-40b480.netlify.app/)
+# [View App](https://musical-trifle-4c68e8.netlify.app/)
